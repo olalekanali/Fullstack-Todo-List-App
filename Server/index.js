@@ -1,66 +1,105 @@
-const express = require("express");
+// index.js (or server.js)
+const express  = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const Todo = require("./models/todo.models.js");
+const cors     = require("cors");
+const dotenv   = require("dotenv");
+const Todo     = require("./models/todo.models.js");
 
-const app = express();
 dotenv.config();
+const app = express();
 
+// ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "https://todo-list-applicationn.vercel.app/"
+    // In production, change "*" → your Vercel URL, e.g.:
+    // origin: "https://your-vite-app.vercel.app"
+  })
+);
 
-app.get("/get", async (req, res) => {
-  const todos = await Todo.find()
-    .then((todos) => {
-      res.status(200).json(todos);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: "Failed to fetch todos" });
-    });
+// ─── ROOT (optional sanity check) ───────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.send("✔️ Todo API is running");
 });
 
-app.post("/add", (req, res) => {
-  const task = req.body.task;
-  Todo.create({ task })
-    .then((todo) => {
-      res.status(201).json(todo);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: "Failed to create todo" });
-    });
+// ─── GET ALL TODOS ───────────────────────────────────────────────────────────────
+app.get("/api/todos", async (req, res) => {
+  try {
+    // Sort by creation date descending (newest first)
+    const todos = await Todo.find().sort({ createdAt: -1 });
+    res.status(200).json(todos);
+  } catch (err) {
+    console.error("Error fetching todos:", err);
+    res.status(500).json({ error: "Failed to fetch todos" });
+  }
 });
 
-app.put("/update/:id", (req, res) => {
+// ─── CREATE A NEW TODO ───────────────────────────────────────────────────────────
+app.post("/api/todos", async (req, res) => {
+  const { task } = req.body;
+  if (!task || task.trim() === "") {
+    return res.status(400).json({ error: "Task is required" });
+  }
+
+  try {
+    const newTodo = await Todo.create({ task });
+    res.status(201).json(newTodo);
+  } catch (err) {
+    console.error("Error creating todo:", err);
+    res.status(500).json({ error: "Failed to create todo" });
+  }
+});
+
+// ─── TOGGLE (UPDATE) A TODO’S COMPLETED STATUS ───────────────────────────────────
+app.put("/api/todos/:id", async (req, res) => {
   const { id } = req.params;
-  const { completed } = req.body; // Extract 'completed' from the body
-  Todo.findByIdAndUpdate(id, { completed }, { new: true })
-    .then((updatedTodo) => res.json(updatedTodo))
-    .catch((err) => res.status(500).json({ error: "Failed to update todo" }));
+  const { completed } = req.body;
+
+  try {
+    const updatedTodo = await Todo.findByIdAndUpdate(
+      id,
+      { completed },
+      { new: true } // return the updated document
+    );
+    if (!updatedTodo) {
+      return res.status(404).json({ error: "Todo not found" });
+    }
+    res.status(200).json(updatedTodo);
+  } catch (err) {
+    console.error("Error updating todo:", err);
+    res.status(500).json({ error: "Failed to update todo" });
+  }
 });
 
-app.delete("/delete/:id", (req, res) => {
+// ─── DELETE A TODO ───────────────────────────────────────────────────────────────
+app.delete("/api/todos/:id", async (req, res) => {
   const { id } = req.params;
-  Todo.findByIdAndDelete(id)
-    .then(() => {
-      res.status(200).json({ message: "Todo deleted successfully" });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: "Failed to delete todo" });
-    });
+  try {
+    const deleted = await Todo.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ error: "Todo not found" });
+    }
+    res.status(200).json({ message: "Todo deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting todo:", err);
+    res.status(500).json({ error: "Failed to delete todo" });
+  }
 });
 
+// ─── MONGODB CONNECTION + SERVER START ─────────────────────────────────────────
+const PORT = process.env.PORT || 5000;
 mongoose
-  .connect(process.env.MONGO_URL)
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
   .then(() => {
-    console.log("Connected to MongoDB successfully!");
-    app.listen(5000, () => {
-      console.log("Server is running on port 5000");
+    console.log("🌱 Connected to MongoDB successfully!");
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("Error connecting to MongoDB:", err);
+    console.error("❌ Error connecting to MongoDB:", err);
   });

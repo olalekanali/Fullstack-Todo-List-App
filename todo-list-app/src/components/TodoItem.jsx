@@ -9,10 +9,11 @@ export function TodoItem({ todo, onToggle, onDelete }) {
           : <AiOutlineBorder size={24} />
         }
       </button>
-      <span className="todo-text">{todo.text}</span>
+      <span className="todo-text">{todo.task}</span>
       <button className="delete-btn" onClick={() => onDelete(todo._id)}>
         <AiOutlineDelete size={20} />
       </button>
     </li>
   );
 }
+

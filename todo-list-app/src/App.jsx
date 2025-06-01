@@ -13,8 +13,8 @@ function App() {
       .catch(err => console.error(err));
   }, []);
 
-  const addTodo = (text) => {
-    axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/todos`, { text })
+  const addTodo = (task) => {
+    axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/todos`, { task })
       .then(res => setTodos([...todos, res.data]))
       .catch(err => console.error(err));
   };

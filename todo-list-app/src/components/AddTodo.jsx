@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { AiOutlinePlus } from 'react-icons/ai';
 
 export function AddTodo({ onAdd }) {
-  const [text, setText] = useState('');
+  const [task, setTask] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!text.trim()) return;
-    onAdd(text);
-    setText('');
+    if (!task.trim()) return;
+    onAdd(task);
+    setTask('');
   };
 
   return (
@@ -17,8 +17,8 @@ export function AddTodo({ onAdd }) {
         type="text"
         className="add-input"
         placeholder="Add a new task..."
-        value={text}
-        onChange={e => setText(e.target.value)}
+        value={task}
+        onChange={e => setTask(e.target.value)}
       />
       <button type="submit" className="add-button">
         <AiOutlinePlus size={20} />
