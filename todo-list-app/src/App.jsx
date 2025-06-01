@@ -8,26 +8,26 @@ function App() {
 
   useEffect(() => {
     // Fetch from backend
-    axios.get('http://localhost:5000/api/todos')
+    axios.get(`${import.meta.env.BACKEND_URL}/api/todos`)
       .then(res => setTodos(res.data))
       .catch(err => console.error(err));
   }, []);
 
   const addTodo = (text) => {
-    axios.post('http://localhost:5000/api/todos', { text })
+    axios.post(`${import.meta.env.BACKEND_URL}/api/todos`, { text })
       .then(res => setTodos([...todos, res.data]))
       .catch(err => console.error(err));
   };
 
   const toggleTodo = (id) => {
     const todo = todos.find(t => t._id === id);
-    axios.put(`http://localhost:5000/api/todos/${id}`, { completed: !todo.completed })
+    axios.put(`${import.meta.env.BACKEND_URL}/api/todos/${id}`, { completed: !todo.completed })
       .then(res => setTodos(todos.map(t => t._id === id ? res.data : t)))
       .catch(err => console.error(err));
   };
 
   const deleteTodo = (id) => {
-    axios.delete(`http://localhost:5000/api/todos/${id}`)
+    axios.delete(`${import.meta.env.BACKEND_URL}/api/todos/${id}`)
       .then(() => setTodos(todos.filter(t => t._id !== id)))
       .catch(err => console.error(err));
   };
