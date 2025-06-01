@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/get", async (req, res) => {
-  const todos = Todo.find()
+  const todos = await Todo.find()
     .then((todos) => {
       res.status(200).json(todos);
     })
